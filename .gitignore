@@ -3,16 +3,20 @@
 Thumbs.db
 
 # === Backend (Django) Ignore Rules ===
-kudos_backend/__pycache__/
-kudos_backend/*.pyc
-kudos_backend/*.pyo
-kudos_backend/*.pyd
 kudos_backend/venv/
-kudos_backend/.env
-kudos_backend/db.sqlite3
-kudos_backend/staticfiles/
-kudos_backend/media/
-kudos_backend/config.json
+
+kudos_backend/kudos/__pycache__/
+kudos_backend/kudos/*.pyc
+kudos_backend/kudos/*.pyo
+kudos_backend/kudos/*.pyd
+kudos_backend/kudos/.env
+kudos_backend/kudos/db.sqlite3
+kudos_backend/kudos/staticfiles/
+kudos_backend/kudos/media/
+kudos_backend/kudos/config.json
+
+# === Celery Ignore ===
+kudos_backend/kudos/celerybeat-schedule.*
 
 # === Frontend (React) Ignore Rules ===
 kudos_frontend/node_modules/
