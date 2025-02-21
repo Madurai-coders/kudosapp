@@ -43,13 +43,13 @@ You can run this project in two ways:
    - Celery worker and Celery Beat for scheduled tasks  
 
 3. Create and apply database migrations:  
-   docker-compose exec backend python manage.py migrate  
+   docker-compose web backend python manage.py migrate  
 
 4. Create a superuser:  
-   docker-compose exec backend python manage.py createsuperuser  
+   docker-compose web backend python manage.py createsuperuser  
 
-5. *(Optional)* Generate demo data:  
-   docker-compose exec backend python manage.py generate_demo_data  
+5. Generate demo data:  
+   docker-compose web backend python manage.py generate_demo_data  
 
 6. Access the application:  
    - Backend API: http://localhost:8000/api/  
@@ -64,7 +64,7 @@ You can run this project in two ways:
 
 #### **Prerequisites**  
 - Python 3.9+  
-- PostgreSQL (or SQLite for local development)  
+- SQLite 
 - Redis (for Celery)  
 
 ### **Steps**  
@@ -78,27 +78,30 @@ You can run this project in two ways:
    source venv/bin/activate  # On Windows: venv\Scripts\activate  
 
 3. Install dependencies:  
-   pip install -r requirements.txt  
+   pip install -r requirements.txt
 
-4. Apply migrations:  
+4. Navigate to the Django project folder (kudos):
+   cd kudos
+
+5. Apply migrations:  
    python manage.py migrate  
 
-5. Create a superuser:  
+6. Create a superuser:  
    python manage.py createsuperuser  
 
-6. Start the backend server:  
+7. Start the backend server:  
    python manage.py runserver  
 
-7. Navigate to the frontend directory:  
+8. Navigate to the frontend directory:  
    cd kudos_frontend  
 
-8. Install dependencies:  
+9. Install dependencies:  
    npm install  # or yarn install  
 
-9. Start the frontend:  
+10. Start the frontend:  
    npm start  # or yarn start  
 
-10. Open http://localhost:3000/ in the browser  
+11. Open http://localhost:3000/ in the browser  
 
 ---
 
@@ -111,7 +114,7 @@ Celery is used for handling background tasks like sending email notifications.
    redis-server  
 
 2. **Start Celery Worker**  
-   cd kudos_backend  
+   cd kudos_backend/kudos/  
    celery -A kudos worker --loglevel=info  
 
 3. **Start Celery Beat (For Scheduled Tasks)**  
