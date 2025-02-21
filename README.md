@@ -43,13 +43,13 @@ You can run this project in two ways:
    - Celery worker and Celery Beat for scheduled tasks  
 
 3. Create and apply database migrations:  
-   docker-compose web backend python manage.py migrate  
+   docker-compose exec web python manage.py migrate  
 
 4. Create a superuser:  
-   docker-compose web backend python manage.py createsuperuser  
+   docker-compose exec web python manage.py createsuperuser  
 
 5. Generate demo data:  
-   docker-compose web backend python manage.py generate_demo_data  
+   docker-compose exec web python manage.py generate_demo_data  
 
 6. Access the application:  
    - Backend API: http://localhost:8000/api/  
