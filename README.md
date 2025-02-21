@@ -9,7 +9,7 @@ A web application to send and receive kudos between team members. Built with Dja
 - Kudos sending with weekly quota limits  
 - Celery-powered background task processing  
 - Redis for message brokering  
-- PostgreSQL (or SQLite) for database management  
+- SQLite for database management  
 - Dockerized setup for easy deployment  
 
 ---
