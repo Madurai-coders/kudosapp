@@ -38,7 +38,7 @@ You can run this project in two ways:
    This will start:  
    - The Django backend  
    - The React frontend  
-   - PostgreSQL database  
+   - SQLite database  
    - Redis message broker  
    - Celery worker and Celery Beat for scheduled tasks  
 
