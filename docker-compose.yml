@@ -3,7 +3,7 @@ services:
   web:
     build: ./kudos_backend/kudos
     container_name: kudos_backend
-    working_dir: /app/kudos  # Change this to match manage.py location
+    working_dir: /app/kudos  
     command: >
       sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
@@ -26,7 +26,7 @@ services:
   celery:
     build: ./kudos_backend/kudos
     container_name: kudos_celery
-    working_dir: /app/kudos  # Change this
+    working_dir: /app 
     command: celery -A kudos worker --loglevel=info
     depends_on:
       - redis
@@ -38,7 +38,7 @@ services:
   celery-beat:
     build: ./kudos_backend/kudos
     container_name: kudos_celery_beat
-    working_dir: /app/kudos  # Change this
+    working_dir: /app  
     command: celery -A kudos beat --loglevel=info
     depends_on:
       - redis

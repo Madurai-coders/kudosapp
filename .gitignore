@@ -17,6 +17,9 @@ kudos_backend/kudos/staticfiles/
 kudos_backend/kudos/media/
 kudos_backend/kudos/config.json
 
+kudos_backend/kudos/api/migrations/*
+!kudos_backend/kudos/api/migrations/__init__.py
+
 
 kudos_backend/kudos/api/__pycache__/
 kudos_backend/kudos/api/*.pyc

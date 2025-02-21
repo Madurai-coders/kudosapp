@@ -1,27 +1,53 @@
-from django.contrib.auth.models import User
 from django.db import models
 from django.utils.timezone import now
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import AbstractUser
+from django.conf import settings
+
 
 class Organization(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class User(AbstractUser):  # Custom User model
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    def __str__(self):
+        return self.username
+
 
 class Kudos(models.Model):
-    giver = models.ForeignKey(User, related_name="kudos_given", on_delete=models.CASCADE)
-    receiver = models.ForeignKey(User, related_name="kudos_received", on_delete=models.CASCADE)
+    giver = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name="kudos_given", on_delete=models.CASCADE, db_index=True
+    )
+    receiver = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name="kudos_received", on_delete=models.CASCADE, db_index=True
+    )
     message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(giver=models.F("receiver")),
+                name="prevent_self_kudos",
+            )
+        ]
+
+    def __str__(self):
+        return f"Kudos from {self.giver} to {self.receiver}"
 
 
 class KudosQuota(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    kudos_remaining = models.IntegerField(default=3)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    kudos_remaining = models.PositiveIntegerField(default=3)
     last_reset = models.DateTimeField(default=now)
 
-    def reset_quota(self):
-        """Resets the kudos quota to 3 at the start of each week"""
-        self.kudos_remaining = 3
-        self.last_reset = now()
-        self.save()
+    def __str__(self):
+        return f"{self.user.username} - {self.kudos_remaining} kudos left"

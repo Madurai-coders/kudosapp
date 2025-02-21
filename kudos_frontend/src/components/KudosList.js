@@ -40,7 +40,7 @@ const KudosList = ({ currentUser }) => {
       {error && <p className="text-red-500">{error}</p>}
 
       {/* Filter Buttons */} 
-      <div className="flex gap-3 mb-4 justify-end">
+      <div className="flex gap-3 mb-4 justify-end mr-2">
         <button
           className={`px-4 py-2 rounded ${
             filter === "all" ? "bg-purple-600 text-white" : "bg-gray-700"

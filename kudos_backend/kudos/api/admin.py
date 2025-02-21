@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import Kudos,KudosQuota
+from django.contrib.auth.admin import UserAdmin
+from .models import Kudos, KudosQuota, User  # Import your custom User model
+
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):  
+    list_display = ("id", "username", "email", "organization", "is_staff", "is_active")
+    search_fields = ("username", "email", "organization__name")
+    list_filter = ("is_staff", "is_active", "organization")
+    ordering = ("id",)
 
 @admin.register(Kudos)
 class KudosAdmin(admin.ModelAdmin):

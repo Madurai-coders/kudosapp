@@ -9,18 +9,33 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
-      setUser({ username: localStorage.getItem("username") });
+      setUser({
+        username: localStorage.getItem("username"),
+        email: localStorage.getItem("email"),
+        organization: JSON.parse(localStorage.getItem("organization")),
+      });
     }
   }, [token]);
 
   const login = async (username, password) => {
     try {
       const data = await loginUser(username, password);
+
+      // Store tokens
       localStorage.setItem("access", data.access);
       localStorage.setItem("refresh", data.refresh);
-      localStorage.setItem("username", username);
+
+      // Store user info
+      localStorage.setItem("username", data.user.username);
+      localStorage.setItem("email", data.user.email);
+      localStorage.setItem("organization", JSON.stringify(data.user.organization));
+
       setToken(data.access);
-      setUser({ username });
+      setUser({
+        username: data.user.username,
+        email: data.user.email,
+        organization: data.user.organization,
+      });
     } catch (error) {
       throw error;
     }
@@ -30,6 +45,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     localStorage.removeItem("username");
+    localStorage.removeItem("email");
+    localStorage.removeItem("organization");
+    
     setToken(null);
     setUser(null);
   };

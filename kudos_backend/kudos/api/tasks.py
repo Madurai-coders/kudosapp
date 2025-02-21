@@ -1,17 +1,17 @@
-from celery import shared_task
-from .models import KudosQuota  # Ensure correct import path
 import logging
+from celery import shared_task
+from api.models import KudosQuota  # Ensure correct import
 
-logger = logging.getLogger("cron")
+logger = logging.getLogger(__name__)
 
-@shared_task
+@shared_task(name="reset_kudos_task")  # Explicitly define the task name
 def reset_kudos_task():
-    """Alternates kudos_remaining between 0 and 3 every 2 minutes."""
-    current_quota = KudosQuota.objects.first()  # Get first instance
-    if current_quota and current_quota.kudos_remaining > 0:
-        new_value = 0
+    """Resets kudos_remaining to 3 every Sunday."""
+    task_name = "Reset Kudos Task"  # Define a user-friendly name for logs
+    
+    updated_rows = KudosQuota.objects.update(kudos_remaining=3)  # Update all rows
+    
+    if updated_rows:
+        logger.info(f"✅ {task_name}: Kudos Quota Reset to 3!")
     else:
-        new_value = 3
-
-    KudosQuota.objects.update(kudos_remaining=new_value)
-    logger.info(f"✅ Kudos Quota Reset to {new_value}!")
+        logger.warning(f"⚠️ {task_name}: No KudosQuota instances found!")

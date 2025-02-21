@@ -10,7 +10,7 @@ const api = axios.create({
 // Function to log in
 export const loginUser = async (username, password) => {
   try {
-    const response = await api.post("/token/", { username, password });
+    const response = await api.post("/login/", { username, password });
     return response.data; // Returns { access, refresh }
   } catch (error) {
     console.error("Login failed", error);

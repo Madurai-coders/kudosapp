@@ -1,86 +1,123 @@
-from django.shortcuts import render
-from django.contrib.auth.models import User
-from rest_framework import viewsets, permissions ,status
+from django.utils.timezone import now
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from rest_framework.decorators import action,permission_classes, api_view
+from rest_framework.decorators import action, permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UserSerializer
-from .models import Kudos
-from .serializers import KudosSerializer
-from django.utils.timezone import now, timedelta
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 from .models import Kudos, KudosQuota
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from .serializers import UserSerializer, KudosSerializer, CustomTokenObtainPairSerializer
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
+MAX_KUDOS_PER_WEEK = 3  # Weekly kudos limit per user
 
+# ------------------------------
+# User Endpoints (Organization-Based)
+# ------------------------------
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_users(request):
-    users = User.objects.exclude(id=request.user.id)  # Exclude the current user
+    """Retrieve all users within the same organization, except the authenticated user."""
+    if request.user.is_superuser:
+        users = User.objects.exclude(id=request.user.id)  # Superusers see all users
+    else:
+        users = User.objects.filter(organization=request.user.organization).exclude(id=request.user.id)
+
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
 
-MAX_KUDOS_PER_WEEK = 3  # Kudos limit per user per week
 
 @api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def get_kudos_quota(request):
-    """Returns the remaining kudos quota for the authenticated user."""
+    """Get the remaining kudos quota for the authenticated user."""
     quota, _ = KudosQuota.objects.get_or_create(user=request.user, defaults={"kudos_remaining": MAX_KUDOS_PER_WEEK})
     return Response({"kudos_remaining": max(quota.kudos_remaining, 0)})
 
+
+# ------------------------------
+# Kudos Endpoints (Organization-Based)
+# ------------------------------
+
 class KudosViewSet(viewsets.ModelViewSet):
-    queryset = Kudos.objects.all().order_by("-created_at")
+    """Viewset for handling Kudos-related actions (organization-scoped)."""
     serializer_class = KudosSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Filter Kudos by the user's organization (unless superuser)."""
+        if self.request.user.is_superuser:
+            return Kudos.objects.all().order_by("-created_at")
+        return Kudos.objects.filter(
+            giver__organization=self.request.user.organization,
+            receiver__organization=self.request.user.organization
+        ).order_by("-created_at")
 
     def get_serializer_context(self):
-        """Pass request context to serializer"""
+        """Pass request context to serializer."""
         return {"request": self.request}
 
     def perform_create(self, serializer):
-        """Reduce the remaining kudos every time the user sends a kudos"""
-        quota, _ = KudosQuota.objects.get_or_create(
-            user=self.request.user, defaults={"kudos_remaining": MAX_KUDOS_PER_WEEK}
-        )
+        """Create a Kudos and ensure it's within the same organization."""
+        user = self.request.user
+        receiver = serializer.validated_data.get("receiver")
+
+        if not user.organization:
+            return Response({"error": "You must belong to an organization to give kudos."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if receiver.organization != user.organization:
+            return Response({"error": "You can only give kudos within your organization."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Fetch sender's quota
+        quota, _ = KudosQuota.objects.get_or_create(user=user, defaults={"kudos_remaining": MAX_KUDOS_PER_WEEK})
 
         if quota.kudos_remaining <= 0:
-            return Response({"error": "Kudos quota exceeded for this week."}, status=HTTP_400_BAD_REQUEST)
+            return Response({"error": "Kudos quota exceeded for this week."}, status=status.HTTP_400_BAD_REQUEST)
 
-        quota.kudos_remaining -= 1  # Reduce kudos count
-        quota.save(update_fields=["kudos_remaining"])  # Save updated quota
-
-        serializer.save(giver=self.request.user)  # Save the kudos entry
+        # Reduce quota and save efficiently
+        KudosQuota.objects.filter(user=user).update(kudos_remaining=quota.kudos_remaining - 1)
+        serializer.save(giver=user)
 
     @action(detail=False, methods=["get"])
     def received(self, request):
-        """Get kudos received by the authenticated user"""
+        """Get all kudos received by the authenticated user (within organization)."""
         kudos = Kudos.objects.filter(receiver=request.user)
         serializer = self.get_serializer(kudos, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
     def given(self, request):
-        """Get kudos given by the authenticated user"""
+        """Get all kudos given by the authenticated user (within organization)."""
         kudos = Kudos.objects.filter(giver=request.user)
         serializer = self.get_serializer(kudos, many=True)
         return Response(serializer.data)
 
 
+# ------------------------------
+# Authentication Views
+# ------------------------------
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """Custom JWT view returning user details including organization."""
+    serializer_class = CustomTokenObtainPairSerializer
+
+
 class LogoutView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    """Logout a user by blacklisting their refresh token."""
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        try:
-            refresh_token = request.data.get("refresh_token")  # Get token from request
-            if not refresh_token:
-                return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+        refresh_token = request.data.get("refresh_token")
+        if not refresh_token:
+            return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-            token = RefreshToken(refresh_token)  # Convert to token object
-            token.blacklist()  # Blacklist the refresh token
-            
+        try:
+            RefreshToken(refresh_token).blacklist()  # Blacklist the token
             return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

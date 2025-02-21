@@ -18,21 +18,31 @@ const Header = () => {
 
 
   return (
-    <header className="bg-gray-900 text-white  px-2 flex justify-between items-center shadow-lg">
-      {/* Left: Welcome Message */}
-      <h1 className="text-xl font-semibold">
-        Welcome, <span className="text-blue-400">{capitalizeFirstLetter(user?.username)}
-        </span>! 🎉
-      </h1>
-
-      {/* Right: Logout Button */}
+    <header className="bg-gray-900 text-white px-2 flex justify-between items-center shadow-lg">
+    {/* Left: Welcome Message */}
+    <h1 className="text-xl font-semibold">
+      Welcome, <span className="text-blue-400">{capitalizeFirstLetter(user?.username)}</span>! 🎉
+    </h1>
+  
+    {/* Right: Organization & Logout Button */}
+    <div className="flex items-center space-x-4">
+      {/* Organization Name */}
+      {user?.organization && (
+        <span className="text-sm text-gray-300">
+          Organization: <span className="text-green-400 font-semibold">{user.organization?.name}</span>
+        </span>
+      )}
+  
+      {/* Logout Button */}
       <button
         onClick={handleLogout}
         className="bg-red-600 hover:bg-red-700 p-1 m-2 mt-3 pt-0 rounded-full transition-all"
       >
         <span className="text-white text-xl">⏻</span> {/* Power Icon */}
       </button>
-    </header>
+    </div>
+  </header>
+  
   );
 };
 
