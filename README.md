@@ -115,7 +115,7 @@ Celery is used for handling background tasks like sending email notifications.
 
 2. **Start Celery Worker**  
    cd kudos_backend/kudos/  
-   celery -A kudos worker --loglevel=info  
+   celery -A kudos worker --loglevel=info 
 
 3. **Start Celery Beat (For Scheduled Tasks)**  
    celery -A kudos beat --loglevel=info  
@@ -130,7 +130,7 @@ python manage.py generate_demo_data
 This will:  
 - Create 10 users  
 - Assign each user a kudos quota  
-- Generate 20 random kudos exchanges  
+- Generate 20 random kudos exchanges
+⚠️ This will delete all existing users except the admin.
 
 ---
-
