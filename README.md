@@ -131,6 +131,7 @@ This will:
 - Create 10 users  
 - Assign each user a kudos quota  
 - Generate 20 random kudos exchanges
+- Password: password123
 ⚠️ This will delete all existing users except the admin.
 
 ---
