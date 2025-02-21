@@ -1,0 +1,27 @@
+# === General Ignore Rules ===
+.DS_Store
+Thumbs.db
+
+# === Backend (Django) Ignore Rules ===
+kudos_backend/__pycache__/
+kudos_backend/*.pyc
+kudos_backend/*.pyo
+kudos_backend/*.pyd
+kudos_backend/venv/
+kudos_backend/.env
+kudos_backend/db.sqlite3
+kudos_backend/staticfiles/
+kudos_backend/media/
+kudos_backend/config.json
+
+# === Frontend (React) Ignore Rules ===
+kudos_frontend/node_modules/
+kudos_frontend/build/
+kudos_frontend/dist/
+kudos_frontend/npm-debug.log
+kudos_frontend/yarn-error.log
+kudos_frontend/.env
+
+# === Docker Ignore ===
+docker-compose.override.yml
+.env

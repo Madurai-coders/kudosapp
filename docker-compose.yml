@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  web:
+    build: ./kudos_backend/kudos
+    container_name: kudos_backend
+    working_dir: /app/kudos  # Change this to match manage.py location
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./kudos_backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      DJANGO_SETTINGS_MODULE: "kudos.settings"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+
+  redis:
+    image: redis:latest
+    container_name: kudos_redis
+    ports:
+      - "6379:6379"
+
+  celery:
+    build: ./kudos_backend/kudos
+    container_name: kudos_celery
+    working_dir: /app/kudos  # Change this
+    command: celery -A kudos worker --loglevel=info
+    depends_on:
+      - redis
+      - web
+    environment:
+      DJANGO_SETTINGS_MODULE: "kudos.settings"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+
+  celery-beat:
+    build: ./kudos_backend/kudos
+    container_name: kudos_celery_beat
+    working_dir: /app/kudos  # Change this
+    command: celery -A kudos beat --loglevel=info
+    depends_on:
+      - redis
+      - web
+      - celery
+    environment:
+      DJANGO_SETTINGS_MODULE: "kudos.settings"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+
+  frontend:
+    build: ./kudos_frontend
+    container_name: kudos_frontend
+    volumes:
+      - ./kudos_frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    stdin_open: true
+    tty: true
