@@ -2,10 +2,12 @@
 .DS_Store
 Thumbs.db
 
+
 # === Backend (Django) Ignore Rules ===
 kudos_backend/venv/
 
 kudos_backend/kudos/__pycache__/
+kudos_backend/kudos/kudos/__pycache__/
 kudos_backend/kudos/*.pyc
 kudos_backend/kudos/*.pyo
 kudos_backend/kudos/*.pyd
@@ -15,6 +17,11 @@ kudos_backend/kudos/staticfiles/
 kudos_backend/kudos/media/
 kudos_backend/kudos/config.json
 
+
+kudos_backend/kudos/api/__pycache__/
+kudos_backend/kudos/api/*.pyc
+kudos_backend/kudos/api/*.pyo
+kudos_backend/kudos/api/**/*.pyc
 # === Celery Ignore ===
 kudos_backend/kudos/celerybeat-schedule.*
 
