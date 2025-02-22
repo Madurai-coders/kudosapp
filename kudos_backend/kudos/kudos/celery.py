@@ -29,5 +29,3 @@ app.conf.beat_schedule = {
 # Auto-discover tasks in installed apps
 app.autodiscover_tasks()
 
-# Log Celery startup
-logger.info("✅ Celery app configured successfully!")

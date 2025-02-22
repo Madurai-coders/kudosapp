@@ -4,7 +4,7 @@ from api.models import KudosQuota  # Ensure correct import
 
 logger = logging.getLogger(__name__)
 
-@shared_task(name="reset_kudos_task")  # Explicitly define the task name
+@shared_task(name="api.tasks.reset_kudos_task")  # Ensure the full name is correct
 def reset_kudos_task():
     """Resets kudos_remaining to 3 every Sunday."""
     task_name = "Reset Kudos Task"  # Define a user-friendly name for logs
