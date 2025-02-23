@@ -128,6 +128,8 @@ SIMPLE_JWT = {
 
 # Redis is used as the message broker
 CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TIMEZONE = 'UTC'
 
 # Store task results in Django DB (optional)
 CELERY_RESULT_BACKEND = "django-db"
@@ -137,6 +139,8 @@ CELERY_TASK_SERIALIZER = "json"
 
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_CACHE_BACKEND = "django-cache"
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
