@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import apiService from "../services/apiService";
 import KudosItem from "./KudosItem";
 
-const KudosList = ({ currentUser }) => {
+const KudosList = ({ getKudos }) => {
   const [kudos, setKudos] = useState([]);
   const [filter, setFilter] = useState("all"); // Default to showing all kudos
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ const KudosList = ({ currentUser }) => {
     };
 
     fetchKudos();
-  }, [filter, currentUser?.id]); // Fetch when filter changes or user is loaded
+  }, [filter, getKudos]); // Fetch when filter changes or user is loaded
 
   return (
     <div className="mt-6">
