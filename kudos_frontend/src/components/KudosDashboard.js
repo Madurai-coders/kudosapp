@@ -38,7 +38,6 @@ const KudosDashboard = ({ currentUser }) => {
       alert("You have no kudos remaining for this week.");
       return;
     }
-    setGetKudos(new Date());
     try {
       setLoading(true);
       await apiService.post("/kudos/", {
@@ -49,6 +48,7 @@ const KudosDashboard = ({ currentUser }) => {
       setKudosRemaining((prev) => prev - 1);
       setMessage("");
       alert("Kudos sent!");
+      setGetKudos(new Date());
     } catch (err) {
       console.error("Error sending kudos:", err);
       alert("Error sending kudos: " + err.message);
@@ -75,7 +75,7 @@ const KudosDashboard = ({ currentUser }) => {
 
       {/* Right: Kudos List with API-based filtering */}
       <div className="flex-1 overflow-y-auto h-full scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-gray-900">
-        <KudosList getKudos={getKudos}/>
+        <KudosList getKudos={getKudos} />
       </div>
     </div>
   );
