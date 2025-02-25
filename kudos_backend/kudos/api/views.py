@@ -63,24 +63,36 @@ class KudosViewSet(viewsets.ModelViewSet):
         return {"request": self.request}
 
     def perform_create(self, serializer):
-        """Create a Kudos and ensure it's within the same organization."""
+        """Allow admins to give kudos across organizations while enforcing quota."""
         user = self.request.user
         receiver = serializer.validated_data.get("receiver")
 
-        if not user.organization:
-            return Response({"error": "You must belong to an organization to give kudos."}, status=status.HTTP_400_BAD_REQUEST)
+        if not user.is_superuser:
+            # Regular user: Must belong to an organization and give kudos within it
+            if not user.organization:
+                return Response(
+                    {"error": "You must belong to an organization to give kudos."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        if receiver.organization != user.organization:
-            return Response({"error": "You can only give kudos within your organization."}, status=status.HTTP_403_FORBIDDEN)
+            if receiver.organization != user.organization:
+                return Response(
+                    {"error": "You can only give kudos within your organization."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
 
-        # Fetch sender's quota
+        # Enforce the same kudos quota for both regular users and admins
         quota, _ = KudosQuota.objects.get_or_create(user=user, defaults={"kudos_remaining": MAX_KUDOS_PER_WEEK})
-
         if quota.kudos_remaining <= 0:
-            return Response({"error": "Kudos quota exceeded for this week."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Kudos quota exceeded for this week."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        # Reduce quota and save efficiently
+        # Deduct quota for both admins and regular users
         KudosQuota.objects.filter(user=user).update(kudos_remaining=quota.kudos_remaining - 1)
+
+        # Save the kudos
         serializer.save(giver=user)
 
     @action(detail=False, methods=["get"])
