@@ -3,13 +3,11 @@ from api.models import Kudos, KudosQuota, Organization
 from faker import Faker
 import random
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
-
-
 fake = Faker()
 
 MAX_KUDOS_PER_WEEK = 3  # Ensure this matches your settings
-
 
 class Command(BaseCommand):
     help = "Flush existing data (except admin) and generate random demo data"
@@ -43,15 +41,29 @@ class Command(BaseCommand):
         self.stdout.write("Generating new users...")
 
         users = []
+        sample_user = None  # To store a sample user
+
         for _ in range(10):
+            username = fake.user_name()
+            email = fake.email()
+            password = "password123"  # Default password for all users
+
             user = User.objects.create_user(
-                username=fake.user_name(),
-                email=fake.email(),
-                password="password123"
+                username=username,
+                email=email,
+                password=password
             )
             user.organization = random.choice(organizations)  # Assign user to a random organization
             user.save()
             users.append(user)
+
+            # Pick one random user for sample output
+            if sample_user is None or random.random() > 0.5:  
+                sample_user = (username, password)
+
+        # Print only one sample user's credentials
+        if sample_user:
+            self.stdout.write(self.style.SUCCESS(f"Sample User - Username: {sample_user[0]}, Password: {sample_user[1]}"))
 
         # Ensure quotas are created for each new user
         for user in users:
