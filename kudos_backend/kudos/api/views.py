@@ -11,6 +11,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import Kudos, KudosQuota
 from .serializers import UserSerializer, KudosSerializer, CustomTokenObtainPairSerializer
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 User = get_user_model()
 MAX_KUDOS_PER_WEEK = 3  # Weekly kudos limit per user
@@ -26,7 +27,7 @@ def get_users(request):
     if request.user.is_superuser:
         users = User.objects.exclude(id=request.user.id)  # Superusers see all users
     else:
-        users = User.objects.filter(organization=request.user.organization).exclude(id=request.user.id)
+        users = User.objects.filter(organization=request.user.organization).exclude(id=request.user.id) | User.objects.filter(is_superuser=True)
 
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
@@ -54,8 +55,8 @@ class KudosViewSet(viewsets.ModelViewSet):
         if self.request.user.is_superuser:
             return Kudos.objects.all().order_by("-created_at")
         return Kudos.objects.filter(
-            giver__organization=self.request.user.organization,
-            receiver__organization=self.request.user.organization
+        Q(giver__organization=self.request.user.organization) |
+        Q(receiver__organization=self.request.user.organization)
         ).order_by("-created_at")
 
     def get_serializer_context(self):
@@ -67,6 +68,7 @@ class KudosViewSet(viewsets.ModelViewSet):
         user = self.request.user
         receiver = serializer.validated_data.get("receiver")
 
+        # Allow superusers to give kudos to anyone
         if not user.is_superuser:
             # Regular user: Must belong to an organization and give kudos within it
             if not user.organization:
@@ -75,9 +77,10 @@ class KudosViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            if receiver.organization != user.organization:
+            # Allow regular users to send kudos to superusers
+            if not receiver.is_superuser and receiver.organization != user.organization:
                 return Response(
-                    {"error": "You can only give kudos within your organization."},
+                    {"error": "You can only give kudos within your organization, except for superusers."},
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
@@ -92,8 +95,8 @@ class KudosViewSet(viewsets.ModelViewSet):
         # Deduct quota for both admins and regular users
         KudosQuota.objects.filter(user=user).update(kudos_remaining=quota.kudos_remaining - 1)
 
-        # Save the kudos
-        serializer.save(giver=user)
+        serializer.save()  # Save the Kudos object
+
 
     @action(detail=False, methods=["get"])
     def received(self, request):

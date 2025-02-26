@@ -39,7 +39,7 @@ services:
     build: ./kudos_backend/kudos
     container_name: kudos_celery_beat
     working_dir: /app  
-    command: celery -A kudos beat --loglevel=info
+    command: ["sh", "-c", "python manage.py migrate django_celery_beat && celery -A kudos beat --loglevel=info"]
     depends_on:
       - redis
       - web
